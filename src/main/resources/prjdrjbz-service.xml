@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:tx="http://www.springframework.org/schema/tx" xmlns:p="http://www.springframework.org/schema/p"
+  xmlns:security="http://www.springframework.org/schema/security"
+  xmlns:util="http://www.springframework.org/schema/util" xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+  xsi:schemaLocation="
+    http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/tx
+    http://www.springframework.org/schema/tx/spring-tx.xsd   
+    http://www.springframework.org/schema/util
+    http://www.springframework.org/schema/util/spring-util.xsd 
+    http://www.springframework.org/schema/security
+    http://www.springframework.org/schema/security/spring-security.xsd 
+    http://cxf.apache.org/jaxrs
+    http://cxf.apache.org/schemas/jaxrs.xsd">
+
+  <context:annotation-config />
+  <context:component-scan base-package="com.gonghaiwei.prjdrjbz" />
+
+  <bean id="prjdrjbz-service.dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+    destroy-method="close">
+    <property name="driverClassName"
+      value="${prjdrjbz-service.dataSource.driverClassName:org.apache.derby.jdbc.AutoloadedDriver}" />
+    <property name="url"
+      value="${prjdrjbz-service.dataSource.url:jdbc:derby:prjdrjbz-service-db;create=true}" />
+    <property name="username" value="${prjdrjbz-service.dataSource.username:}" />
+    <property name="password" value="${prjdrjbz-service.dataSource.password:}" />
+    <property name="initialSize"
+      value="${prjdrjbz-service.dataSource.initialSize:0}" />
+    <property name="maxActive" value="${prjdrjbz-service.dataSource.maxActive:8}" />
+    <property name="maxWait"
+      value="${prjdrjbz-service.dataSource.maxWait:10000}" />
+    <property name="minIdle" value="${prjdrjbz-service.dataSource.minIdle:10}" />
+    <property name="maxIdle" value="${prjdrjbz-service.dataSource.maxIdle:20}" />
+    <property name="logAbandoned"
+      value="${prjdrjbz-service.dataSource.logAbandoned:true}" />
+    <property name="removeAbandoned"
+      value="${prjdrjbz-service.dataSource.removeAbandoned:true}" />
+    <property name="removeAbandonedTimeout"
+      value="${prjdrjbz-service.dataSource.removeAbandonedTimeout:60}" />
+    <property name="testWhileIdle"
+      value="${prjdrjbz-service.dataSource.testWhileIdle:true}" />
+    <property name="timeBetweenEvictionRunsMillis"
+      value="${prjdrjbz-service.dataSource.timeBetweenEvictionRunsMillis:5000}" />
+    <property name="minEvictableIdleTimeMillis"
+      value="${prjdrjbz-service.dataSource.minEvictableIdleTimeMillis:30000}" />
+    <property name="testOnBorrow"
+      value="${prjdrjbz-service.dataSource.testOnBorrow:true}" />
+    <property name="testOnReturn"
+      value="${prjdrjbz-service.dataSource.testOnReturn:false}" />
+    <property name="validationQuery"
+      value="${prjdrjbz-service.dataSource.validationQuery:}" />
+  </bean>
+
+  <bean id="prjdrjbz-service.jpaAdapter"
+    class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+    <property name="showSql"
+      value="${prjdrjbz-service.jpaAdaptor.showSql:false}" />
+    <property name="generateDdl"
+      value="${prjdrjbz-service.jpaAdaptor.generateDdl:false}" />
+    <property name="databasePlatform"
+      value="${prjdrjbz-service.jpaAdaptor.databasePlatform:org.hibernate.dialect.DerbyDialect}" />
+  </bean>
+
+  <bean id="prjdrjbz-service.emf"
+    class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    <property name="dataSource" ref="prjdrjbz-service.dataSource" />
+    <property name="persistenceXmlLocation" value="classpath:META-INF/persistence.xml" />
+    <property name="persistenceUnitName" value="prjdrjbz-service.persistent-unit" />
+    <property name="jpaVendorAdapter" ref="prjdrjbz-service.jpaAdapter" />
+  </bean>
+
+  <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+    <property name="dataSource" ref="prjdrjbz-service.dataSource" />
+    <property name="entityManagerFactory" ref="prjdrjbz-service.emf" />
+  </bean>
+  <tx:annotation-driven proxy-target-class="true" />
+
+  <!-- rest 接口服务 -->
+  <import resource="classpath:META-INF/cxf/cxf.xml" />
+
+  <bean id="jsonDateFormat" class="java.text.SimpleDateFormat">
+    <constructor-arg value="yyyy-MM-dd'T'HH:mm:ss.SSSZ" />
+  </bean>
+  <bean id="prjdrjbz-service.annotationIntrospector" class="org.codehaus.jackson.map.AnnotationIntrospector.Pair">
+    <constructor-arg>
+      <bean
+        class="org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector" />
+    </constructor-arg>
+    <constructor-arg>
+      <bean class="org.codehaus.jackson.xc.JaxbAnnotationIntrospector" />
+    </constructor-arg>
+  </bean>
+
+  <bean id="prjdrjbz-service.jsonProvider" class="org.codehaus.jackson.jaxrs.JacksonJsonProvider">
+    <property name="mapper">
+      <bean class="org.codehaus.jackson.map.ObjectMapper">
+        <property name="serializationConfig.dateFormat" ref="jsonDateFormat" />
+        <property name="serializationConfig.annotationIntrospector"
+          ref="prjdrjbz-service.annotationIntrospector" />
+        <property name="deserializationConfig.dateFormat" ref="jsonDateFormat" />
+        <property name="deserializationConfig.annotationIntrospector"
+          ref="prjdrjbz-service.annotationIntrospector" />
+      </bean>
+    </property>
+  </bean>
+
+  <jaxrs:server id="prjdrjbz-service" address="/">
+    <jaxrs:serviceBeans>
+      <bean
+        class="com.gonghaiwei.prjdrjbz.provider.facade.WarrantyBillRestServiceImpl" />
+    </jaxrs:serviceBeans>
+    <jaxrs:providers>
+      <bean class="org.apache.cxf.jaxrs.provider.JAXBElementProvider" />
+      <ref bean="prjdrjbz-service.jsonProvider" />
+    </jaxrs:providers>
+  </jaxrs:server>
+
+  <security:global-method-security
+    secured-annotations="enabled">
+  </security:global-method-security>
+
+  <security:http auto-config="true">
+    <security:http-basic />
+  </security:http>
+
+  <security:authentication-manager>
+    <security:authentication-provider>
+      <security:user-service>
+        <security:user name="admin" password="www.shenkai.com"
+          authorities="ROLE_USER" />
+      </security:user-service>
+    </security:authentication-provider>
+  </security:authentication-manager>
+
+</beans>

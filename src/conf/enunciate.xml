@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<enunciate label="prjdrjbz-service" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="http://enunciate.codehaus.org/schemas/enunciate-1.28.xsd">
+
+  <api-classes>
+    <include pattern="com.gonghaiwei.prjdrjbz.api.**" />
+  </api-classes>
+
+  <modules>
+    <swagger disabled="false" applyBaseUriFilter="true" dir="apidoc" />
+    <jersey disabled="true" />
+    <java-client disabled="true" disableCompile="true" />
+    <csharp disableCompile="true" disabled="true" />
+  </modules>
+
+</enunciate>
